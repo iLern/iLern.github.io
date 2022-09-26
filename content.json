@@ -1,1 +1,1 @@
-{"pages":[],"posts":[{"title":"text","text":"Hello World","link":"/2022/09/27/text/"}],"tags":[],"categories":[]}
+{"pages":[{"title":"about","text":"这是一个关于页面","link":"/about/index.html"}],"posts":[{"title":"text","text":"Hello World","link":"/2022/09/27/text/"}],"tags":[{"name":"test","slug":"test","link":"/tags/test/"}],"categories":[]}

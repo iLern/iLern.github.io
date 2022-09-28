@@ -35,7 +35,7 @@
 pre {
   font-size: 15px;
   background-color: #f0f0f0 !important;
-  font-family: "mononoki", "Consolas", 'Roboto Mono', 'Lucida Console', 'Trebuchet MS', 'Courier New', 'Monaco', 'courier', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft Jhenghei', 'Microsoft YaHei', monospace !important;
+  font-family: "Jetbrains nomo", "mononoki", "Consolas", 'Roboto Mono', 'Lucida Console', 'Trebuchet MS', 'Courier New', 'Monaco', 'courier', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft Jhenghei', 'Microsoft YaHei', monospace !important;
 }
 figure.highlight {
   position: relative !important;
@@ -363,7 +363,7 @@ mark {
 code,
 tt {
   padding: 1px 3px;
-  font-family: Inconsolata, monospace, sans-serif;
+  font-family: Jetbrains mono, Inconsolata, monospace, sans-serif;
   font-size: 0.95em;
   white-space: pre-wrap;
   border: 1px solid #e3edf3;

@@ -1,0 +1,168 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="TieStone"><title>Nginx配置ModSecurity · iLern's Blog</title><meta name="description" content="本文介绍了WAF（Web Application
+Firewall）中的ModSecurity，它是一个用于过滤和拦截HTTP流量的WAF，通常部署在反向代理服务器中。ModSecurity通过一组规则集进行工作，并允许用户指定需要过滤的请求特征以及服务器应该采取的操作。文章提供了编译ModSecu"><meta name="keywords" content="Blog,博客,Hexo"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="shortcut icon" type="image/x-icon" href="/images/hexo.png"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="stylesheet" href="/css/insight.css"><link rel="stylesheet" href="/css/search.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><script src="/js/jquery.js"></script><meta name="generator" content="Hexo 6.3.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style></head><body><div class="page-top animated fadeInDown"><div class="nav"><li> <a href="/">首页</a></li><li> <a href="/archives">归档</a></li><li> <a href="/tags">标签</a></li><li> <a href="/about">关于</a></li></div><div class="information"><div class="nav_right_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li><li><a class="fa fa-search" onclick="openWindow();"></a></li></div><div class="avatar"><img src="/images/ilern.png"></div></div></div><div class="sidebar animated fadeInDown"><div class="sidebar-top"><div class="logo-title"><div class="title"><img src="/images/ilern.png" style="width:220px;" alt="favicon"><h3 title=""><a href="/">iLern's Blog</a></h3><div class="description"><p>功名沉浮不必提，稚志初衷别忘记</p></div></div><ul class="social-links"><li><a target="_blank" rel="noopener" href="https://github.com/iLern"><i class="fa fa-github"></i></a></li><li><a href="mailto:taisitong@outlook.com"><i class="fa fa-envelope"></i></a></li><li><a target="_blank" rel="noopener" href="https://www.zhihu.com/people/ilernTai"><i class="fa fa-mortar-board"></i></a></li></ul></div></div><div class="footer"><div class="p"> <span> 全站CC-BY-SA-3.0 </span><i class="fa fa-star"></i><span> TieStone</span></div><div class="by_farbox"><span>Powered by </span><a href="https://hexo.io/zh-cn/" target="_blank">Hexo </a><span> & </span><span>Anatolo </span></div><div class="beian"><a href="http://beian.miit.gov.cn/" target="_blank">京ICP备2023015278号</a></div></div></div><div class="main"><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>Nginx配置ModSecurity</a></h3></div><div class="post-content"><p><p>本文介绍了WAF（Web Application
+Firewall）中的ModSecurity，它是一个用于过滤和拦截HTTP流量的WAF，通常部署在反向代理服务器中。ModSecurity通过一组规则集进行工作，并允许用户指定需要过滤的请求特征以及服务器应该采取的操作。文章提供了编译ModSecurity的步骤，包括从GitHub克隆源码并解决编译过程中的依赖问题。接下来，文章介绍了如何将ModSecurity与Nginx服务器连接起来，通过编译ModSecurity-nginx和Nginx，并配置Nginx以使用ModSecurity。最后，文章演示了如何启动ModSecurity并配置WAF过滤规则，包括指定规则集和使用自定义规则集。通过这些步骤，读者可以了解如何使用ModSecurity构建和配置WAF以保护Web应用程序。</p>
+<h1><span id="waf-modsecurity">WAF - ModSecurity</span></h1>
+<p>ModSecurity是一个WAF（Web Application
+Firewall），可以过滤并拦截Http流量，通常被部署在反向代理服务器中。</p>
+<p>WAF通常根据一组规则集（Core Rule
+Set）进行工作，用户可以指定需要过滤的请求特征，并给出服务器所需进行的操作。</p>
+<p><img src="https://00611-1258610398.cos.ap-nanjing.myqcloud.com/img/202307022247564.png"></p>
+<h1><span id="环境说明">环境说明</span></h1>
+<p><img src="https://00611-1258610398.cos.ap-nanjing.myqcloud.com/img/202307022230595.png"></p>
+<h1><span id="编译modsecurity">编译ModSecurity</span></h1>
+<p>从Github克隆源码：https://github.com/SpiderLabs/ModSecurity</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">./build.sh</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">./configure</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">make</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sudo make install</span></span><br></pre></td></tr></table></figure>
+<p>利用<code>make</code>进行编译，该项目的makefile通过<code>./configure</code>自动生成。在编译过程中涉及一些依赖：</p>
+<ul>
+<li>pcre：正则表达式库</li>
+<li>YAJL：Json解析库</li>
+<li>LMDB：Key-Value数据库</li>
+<li>GeoIP：IP与地理位置映射管理</li>
+<li>libmaxminddb：地理位置数据库</li>
+</ul>
+<p>可以去对应网站下载源码手动编译，也可以利用包管理器安装相关依赖。解决依赖问题后即可安装LibModSecurity。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">❯ tree</span><br><span class="line">.</span><br><span class="line">├── bin</span><br><span class="line">│   └── modsec-rules-check</span><br><span class="line">├── include</span><br><span class="line">│   └── modsecurity</span><br><span class="line">│       ├── actions</span><br><span class="line">│       │   └── action.h</span><br><span class="line">│       ├── anchored_set_variable.h</span><br><span class="line">│       ├── anchored_set_variable_translation_proxy.h</span><br><span class="line">│       ├── anchored_variable.h</span><br><span class="line">│       ├── audit_log.h</span><br><span class="line">│       ├── collection</span><br><span class="line">│       │   ├── collection.h</span><br><span class="line">│       │   └── collections.h</span><br><span class="line">│       ├── debug_log.h</span><br><span class="line">│       ├── intervention.h</span><br><span class="line">│       ├── modsecurity.h</span><br><span class="line">│       ├── reading_logs_via_rule_message.h</span><br><span class="line">│       ├── rule.h</span><br><span class="line">│       ├── rule_marker.h</span><br><span class="line">│       ├── rule_message.h</span><br><span class="line">│       ├── rule_unconditional.h</span><br><span class="line">│       ├── rule_with_actions.h</span><br><span class="line">│       ├── rule_with_operator.h</span><br><span class="line">│       ├── rules.h</span><br><span class="line">│       ├── rules_exceptions.h</span><br><span class="line">│       ├── rules_set.h</span><br><span class="line">│       ├── rules_set_phases.h</span><br><span class="line">│       ├── rules_set_properties.h</span><br><span class="line">│       ├── transaction.h</span><br><span class="line">│       ├── variable_origin.h</span><br><span class="line">│       └── variable_value.h</span><br><span class="line">└── lib</span><br><span class="line">    ├── libmodsecurity.3.dylib</span><br><span class="line">    ├── libmodsecurity.a</span><br><span class="line">    ├── libmodsecurity.dylib -&gt; libmodsecurity.3.dylib</span><br><span class="line">    ├── libmodsecurity.la</span><br><span class="line">    └── pkgconfig</span><br><span class="line">        └── modsecurity.pc</span><br></pre></td></tr></table></figure>
+<h1><span id="编译nginx-modsecurity-nginx">编译Nginx、ModSecurity-nginx</span></h1>
+<p>ModSecutiry可以部署于多种不同的Web服务器，Nginx，Apache等等，为了能用于不同的服务器，ModSecurity提供了一系列的连接器，将其与对应的服务器连接起来。</p>
+<p>ModSecurity-nginx是连接ModSecurity和Nginx的桥梁，为了使ModSecurity能部署于Nginx，需要将ModSecurity-nginx与Nginx一起编译，并连接上一步安装的ModSecurity链接库。</p>
+<blockquote>
+<p>这里有一个小坑，我最初在本地是使用 Homebrew 安装的
+Nginx，但是没有找到如何为其添加外部模块的方法，最后不得不手动编译Nginx</p>
+</blockquote>
+<p>首先需要下载Nginx源码（https://github.com/nginx/nginx）与ModSecurity-nginx源码（https://github.com/SpiderLabs/ModSecurity-nginx），并在编译Nginx时将ModSecurity-nginx指定为其外部模块：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./configure --add-module=/path/to/ModSecurity-nginx</span><br><span class="line">sudo make install</span><br></pre></td></tr></table></figure>
+<p>在编译Nginx时遇到问题，总是提示无法找到ModSecurity链接库，按照网上的做法设置环境变量：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># modsecurity</span><br><span class="line">export MODSECURITY_LIB="/usr/local/modsecurity/lib"</span><br><span class="line">export MODSECURITY_INC="/usr/local/modsecurity/include"</span><br><span class="line">export LD_LIBRARY_PATH="/usr/local/modsecurity/lib"</span><br></pre></td></tr></table></figure>
+<p>后仍然报错。通过检查编译脚本发现，脚本会在检查完Nginx本身的条件之后检查第三方模块的条件，而报错的原因在于<code>ngx_found</code>这个变量没有被正确赋值：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">   # </span><span class="language-bash">modsecurity-nginx/config</span></span><br><span class="line">   </span><br><span class="line">   . auto/feature</span><br><span class="line"></span><br><span class="line">    if [ $ngx_found = no ]; then</span><br><span class="line">        cat &lt;&lt; END</span><br><span class="line">        $0: error: ngx_http_modsecurity_module requires the ModSecurity library and MODSECURITY_LIB is defined as "$MODSECURITY_LIB" and MODSECURITY_INC (path for modsecurity.h) "$MODSECURITY_INC", but we cannot find ModSecurity there.</span><br><span class="line">END</span><br><span class="line">        exit 1</span><br><span class="line">    fi</span><br></pre></td></tr></table></figure>
+<p>这个变量定义自<code>nginx-1.24.0/auto/feature</code>，进一步检查脚本发现，测试的原理是拼贴出一段C代码，并按照读取到的环境变量进行编译，如果能够编译成功则说明库正确安装。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">nginx-1.24.0/auto/feature</span></span><br><span class="line"></span><br><span class="line">cat &lt;&lt; END &gt; $NGX_AUTOTEST.c</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;sys/types.h&gt;</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">NGX_INCLUDE_UNISTD_H</span></span><br><span class="line"><span class="meta prompt_">$</span><span class="language-bash">ngx_feature_incs</span></span><br><span class="line"></span><br><span class="line">int main(void) {</span><br><span class="line">    $ngx_feature_test;</span><br><span class="line">    return 0;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line">END</span><br></pre></td></tr></table></figure>
+<p>其中的变量<code>$ngx_feature_incs</code>就是引入头文件<code>ngx_feature_incs="#include &lt;modsecurity/modsecurity.h&gt;"</code></p>
+<p><code>$ngx_feature_test</code>是简单的一句输出<code>ngx_feature_test='printf("hello");'</code></p>
+<p>问题出现在上面的C代码用到了<code>printf</code>但是并没有引入头文件<code>stdio.h</code>，导致无法通过编译。但是脚本认为没有通过编译就是因为没有正确安装ModSecurity。只要添加一句<code>#include&lt;stdio.h&gt;</code>，即可成功完成编译。</p>
+<p><img src="https://00611-1258610398.cos.ap-nanjing.myqcloud.com/img/202307022221288.png"></p>
+<h1><span id="启动modsecurity并配置waf过滤规则">启动ModSecurity并配置WAF过滤规则</span></h1>
+<p>在Nginx的配置文件中开启modsecurty并指定其采用的规则集</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># nginx.conf</span><br><span class="line"></span><br><span class="line">modsecurity on; # 开启ModSecurity</span><br><span class="line">location / {</span><br><span class="line">    modsecurity_rules_file modsec_includes.conf; #指定规则集</span><br><span class="line"></span><br><span class="line">    root   html;</span><br><span class="line">    index  index.html index.htm;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>规则集简单起见直接使用<code>owasp-modsecurity-crs</code>，在下载<a target="_blank" rel="noopener" href="https://github.com/SpiderLabs/owasp-modsecurity-crs">规则集</a>后，将其导入到我们的自定义规则集<code>modsec_includes.conf</code>当中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">include modsecurity.conf</span><br><span class="line">include owasp-modsecurity-crs/crs-setup.conf</span><br><span class="line">include owasp-modsecurity-crs/rules/*.conf</span><br></pre></td></tr></table></figure>
+<p>配置好规则之后重启Nginx，用<code>curl</code>发送请求，即可在log中看到。</p>
+<p><img src="https://00611-1258610398.cos.ap-nanjing.myqcloud.com/img/202307022223507.png"></p>
+<p>为了测试modsecurity的拦截效果，试着自定义规则集中添加一条规则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SecRule ARGS:testparam "@contains test" "id:1234,deny,status:403"</span><br></pre></td></tr></table></figure>
+<p>这条规则说明当请求中包含参数 testparam 同时其值为 test
+时，拦截请求并返回 403。</p>
+<p><img src="https://00611-1258610398.cos.ap-nanjing.myqcloud.com/img/202307022223523.png"></p>
+</p><div class="tip">本文采用CC-BY-SA-3.0协议，转载请注明出处<br>作者: TieStone</div></div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2023-07-02</span><i class="fa fa-tag"></i><a class="tag" href="/tags/Linux/" title="Linux">Linux </a><i class="fa fa-tag"></i><a class="tag" href="/tags/Nginx/" title="Nginx">Nginx </a><i class="fa fa-tag"></i><a class="tag" href="/tags/网络/" title="网络">网络 </a><span class="leancloud_visitors"></span><span>大约1543个字, 5分钟8秒读完</span></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="" onclick="javascript:join_favorite()" ref="sidebar"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" target="_blank" rel="noopener" href="http://twitter.com/home?status=,http://blog.tiestone.top/2023/07/02/Nginx配置ModSecurity/,iLern's Blog,Nginx配置ModSecurity,;"></a></div></div><div class="pagination"><ul class="clearfix"><li class="next pagbuttons"><a class="btn" role="navigation" href="/2022/10/30/%E4%BD%BF%E7%94%A8touch-id%E9%AA%8C%E8%AF%81sudo/" title="使用touch id验证sudo">下一篇</a></li></ul></div><script src="/js/visitors.js"></script></div></div></div></div><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script><script src="/js/add-bookmark.js"></script><script>(function(window){var INSIGHT_CONFIG={TRANSLATION:{POSTS:"文章",PAGES:"页面",CATEGORIES:"分类",TAGS:"标签",UNTITLED:"(无标题)",},CONTENT_URL:"/content.json",};window.INSIGHT_CONFIG=INSIGHT_CONFIG})(window);</script><script src="/js/insight.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input class="searchbox-input ins-search-input" type="text" placeholder="想要查找什么..."><span class="searchbox-close"><a class="fa fa-times-circle" onclick="closeWindow();"></a></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"><p>Seraching...</p></div></div></div></div></body></html>
